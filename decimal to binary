@@ -1,0 +1,117 @@
+/*
+* File name: decimal to binary
+* Author: ye-Kim (yekim.galanthus@gmail.com)
+* Last updated: 2021. 03. 19.
+*/
+
+#include <stdio.h>
+#include <stdlib.h>
+#define MAX_NUM 5 //the number to repeat
+//#define _DEBUG_ //to debug
+
+struct NODE { //node of list
+	int key;
+	struct NODE* next;
+};
+
+struct NODE* head_1; //store binary number in reverse order
+struct NODE* head_2; //store binary number in correct order
+int cnt = 0; //to indicate the number of result
+
+void push(struct NODE*, int); //input the number to list
+int pop(struct NODE*); //delete the number from list
+
+void div_num(int); //change decimal number to binary number
+
+void list_scan(struct NODE*); //print the list
+void list_free(struct NODE*); //remove the list
+
+void main() {
+	int i, num;
+
+	for (i = 0; i < MAX_NUM; i++) {
+		head_1 = (struct NODE*)malloc(sizeof(struct NODE)); //make the head of list1
+		head_1->next = NULL;
+
+		head_2 = (struct NODE*)malloc(sizeof(struct NODE)); //make the head of list2
+		head_2->next = NULL;
+
+		printf("\nPress the number to divide: ");
+		scanf_s("%d", &num);
+		div_num(num);
+	}
+}
+
+void push(struct NODE* h, int n) {
+	struct NODE* newnode, * ptr = h;
+
+	newnode = (struct NODE*)malloc(sizeof(struct NODE)); //make new node to add
+	newnode->key = n;
+	newnode->next = NULL;
+
+	while (ptr->next != NULL) { //to reach the end of stack
+		ptr = ptr->next;
+	}
+
+	ptr->next = newnode; //add newnode at the end of stack
+}
+int pop(struct NODE* he) {
+	struct NODE* ptr, * oldptr = he;
+	int res;
+
+	ptr = oldptr->next; //the first node of stack
+
+	while (ptr->next != NULL) { //to reach the end of stack
+		oldptr = ptr;
+		ptr = ptr->next;
+	}
+
+	res = ptr->key; //the number to pop
+	free(ptr); //remove the last node
+	oldptr->next = NULL;
+
+	return res;
+}
+
+void div_num(int n){
+	int res = n, mod;
+
+	while (res > 0) { //change to binary from decimal
+		mod = res % 2;
+		res = res / 2;
+		push(head_1, mod);
+	}
+
+#ifdef _DEBUG_
+	printf("\n(List1)");
+	list_scan(head_1);
+#endif
+
+	while (head_1->next != NULL) { //change to correct order
+		push(head_2, pop(head_1));
+	}
+	cnt++; //update the number of result
+	list_scan(head_2);
+	list_free(head_2);
+}
+void list_scan(struct NODE* h) {
+	int i = 0;
+	struct NODE* first;
+	first = h->next;
+	
+	printf("\nTHE %dth RESULT [", cnt);
+	while (first) {
+		printf(" %d ", (*first).key);
+		first = first->next;
+	}
+	printf("]\n");
+}
+void list_free(struct NODE* hd) {
+	struct NODE* oldptr = hd, * ptr;
+	
+	while (oldptr) {
+		ptr = oldptr->next;
+		free(oldptr);
+		oldptr = ptr;
+	}
+}
