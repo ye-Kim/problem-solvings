@@ -1,0 +1,229 @@
+/*
+* File name: general tree to binary tree
+* author: ye-Kim (yekim.galanthus@gmail.com)
+* last updated: 2021. 03. 22.
+*/
+
+#include <stdio.h>
+#include <stdlib.h>
+
+//#define _DEBUG_ //to debug
+
+struct NODE_G { //node of general tree
+	int level;
+	int key;
+	int childkey; //the key of child node
+	struct NODE_G* child;
+	struct NODE_G* next; //the node to read next
+};
+
+struct NODE_B { //node of binary tree
+	int key;
+	struct NODE_B* leftc;
+	struct NODE_B* rightc;
+};
+
+void makeNode(struct NODE_G*, int); //read about informations of general tree and make general tree
+void toBinary(struct NODE_G*, struct NODE_B*); //construct binary tree
+void preorder(struct NODE_B*); //preorder interval in binary tree and print the keys
+void freeG(struct NODE_G*); //free general tree
+void freeB(struct NODE_B*); //free binary tree
+
+struct NODE_G* hg1, * hg2; //head of general tree 1, 2
+struct NODE_B* hb1, * hb2; //head of binary tree 1, 2
+
+void main() {
+	int cnt = 0;
+
+	hg1 = (struct NODE_G*)malloc(sizeof(struct NODE_G));
+	hg1->child = NULL;
+	hg1->next = NULL;
+	hg2 = (struct NODE_G*)malloc(sizeof(struct NODE_G));
+	hg2->child = NULL;
+	hg2->next = NULL;
+
+	/* to prevent the trash value, initialize child and next NULL */
+	
+#ifdef _DEBUG_
+	printf("\ntree1: \n");
+#endif
+
+	makeNode(hg1, cnt++);
+
+#ifdef _DEBUG_
+	printf("\ntree2: \n");
+#endif
+
+	makeNode(hg2, cnt);
+
+	hb1 = (struct NODE_B*)malloc(sizeof(struct NODE_B));
+	hb1->leftc = NULL;
+	hb1->rightc = NULL;
+	hb2 = (struct NODE_B*)malloc(sizeof(struct NODE_B));
+	hb2->leftc = NULL;
+	hb2->rightc = NULL;
+
+	/* to prevent the trash value, initialize leftc and rightc NULL */
+
+	toBinary(hg1, hb1);
+	toBinary(hg2, hb2);
+
+	printf("\nPreorder Interval of tree 1:\n");
+	preorder(hb1->leftc);
+	printf("\n\nPreorder Interval of tree 2: \n");
+	preorder(hb2->leftc);
+
+	freeG(hg1);
+	freeG(hg2);
+	freeB(hb1);
+	freeB(hb2);
+}
+
+void makeNode(struct NODE_G* h, int order) {
+	int tree_level[2][10] = { { 1,2,2,2,3,3,3,3,4,4 }, { 1,2,2,2,2,3,3,3,3,4 } };
+	int tree_key[2][10] = { { 100,200,75,300,25,50,30,150,120,55 }, { 100,200,75,300,95,25,50,30,150,120 } };
+	int tree_child[2][10] = { { 200, NULL, 25, NULL, NULL, NULL, 120, NULL, NULL, NULL }, { 200,NULL,25,NULL,150,NULL,NULL,120,NULL,NULL } };
+
+	/* to classify tree 1 and tree 2, use two-dimensional matrix */
+
+	int j;
+	struct NODE_G* ptr, * oldptr, * p_ptr;
+
+	/* p_ptr is the point of node that has child node but does not find it yet */
+
+	oldptr = h;
+	p_ptr = oldptr;
+
+	for (j = 0; j < 10; j++) {
+		ptr = (struct NODE_G*)malloc(sizeof(struct NODE_G));
+
+		ptr->level = tree_level[order][j];
+		ptr->key = tree_key[order][j];
+		ptr->childkey = tree_child[order][j];
+		ptr->child = NULL;
+		ptr->next = NULL;
+	
+		if (oldptr->childkey != NULL) { //if oldptr has child node
+			p_ptr = oldptr;
+		}
+		if (p_ptr->childkey == ptr->key) { //oldptr find its child node
+			p_ptr->child = ptr;
+		}
+		oldptr->next = ptr;
+	
+#ifdef _DEBUG_
+		printf("%d %d %d\n", ptr->level, ptr->key, ptr->childkey);
+#endif
+		oldptr = ptr; //update oldptr
+	}
+
+}
+
+void toBinary(struct NODE_G* h_g, struct NODE_B*h_b) {
+	struct NODE_G* oldp_g, *ptr_g;
+	struct NODE_B* ptr_b, * oldp_b, * nptr;
+
+	oldp_g = h_g;
+	ptr_g = oldp_g->next;
+	oldp_b = h_b;
+
+	while (ptr_g) {
+		nptr = (struct NODE_B*)malloc(sizeof(struct NODE_B));
+		nptr->key = ptr_g->key;
+		nptr->leftc = NULL;
+		nptr->rightc = NULL;
+
+		/* to prevent the trash value, initialize leftc and rightc NULL */
+
+		ptr_b = nptr;
+
+		if (oldp_g->child == ptr_g) { //oldp_b has child node, so the child node will be its leftc
+			oldp_b->leftc = ptr_b;
+			
+			oldp_b = ptr_b; //update oldp_b
+		}
+		else if (oldp_g->child == NULL) { //oldp_b has no child node, so its sibling node (next node of ptr_g) will be its leftc
+			oldp_b->leftc = ptr_b;
+			
+			oldp_b = ptr_b; //update oldp_b
+		}
+		else if(oldp_g->child != NULL && oldp_g->child != ptr_g) {
+			/* oldp_b has child nod that is not ptr_b, so the ptr_b will be its rightc
+			because the leftc of oldp_b is not decided, so need not to update oldp_b */
+			
+			oldp_b->rightc = ptr_b;
+		}
+
+		oldp_g = ptr_g; //update oldp_g
+		ptr_g = oldp_g->next; //update ptr_g
+	}
+}
+
+void preorder(struct NODE_B* hd) {
+	struct NODE_B* ptr;
+	ptr = hd;
+
+	if (ptr!=NULL) { //preorder: parent node-left child node-right child node
+		printf("%d ", ptr->key); //read parent node
+		preorder(ptr->leftc); //read all subtree of left child node
+		preorder(ptr->rightc); //read right child node
+	}
+}
+
+void freeG(struct NODE_G* start) {
+	struct NODE_G* ptr, * oldptr;
+	oldptr = start;
+	ptr = oldptr->next;
+
+#ifdef _DEBUG_
+	printf("\nfree G tree start\n");
+#endif
+
+	while (ptr) {
+		free(oldptr);
+		oldptr = ptr;
+		ptr = oldptr->next;
+	}
+
+#ifdef _DEBUG_
+	printf("\nfree G tree complete\n");
+#endif
+}
+
+void freeB(struct NODE_B* start) {
+	struct NODE_B* ptr, * oldptr, *right;
+	oldptr = start;
+	ptr = NULL;
+
+#ifdef _DEBUG_
+	printf("\nfree B tree start\n");
+#endif
+	
+	while(oldptr->leftc){
+
+#ifdef _DEBUG_
+		printf("\noldptr's key: %d / rightc: %d\n", oldptr->key, oldptr->rightc);
+#endif
+
+		if (oldptr->rightc) { //if oldptr has right child
+			right = oldptr->rightc;
+#ifdef _DEBUG_
+			printf("%d claer\n", right->key);
+#endif
+			free(right);
+			oldptr->rightc = NULL; //to prevent trash value
+		}
+		else {
+			ptr = oldptr->leftc;
+#ifdef _DEBUG_
+			printf("%d clear\n", ptr->key);
+#endif
+			free(oldptr);
+		}
+		oldptr = ptr; //update oldptr
+	}
+
+#ifdef _DEBUG_
+	printf("\nfree B tree complete\n");
+#endif
+}
